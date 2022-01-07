@@ -1,16 +1,16 @@
 {
   "private": true,
-  "displayName": "Plugin Name",
-  "name": "homebridge-plugin-name",
-  "version": "1.0.0",
-  "description": "A short description about what your plugin does.",
+  "displayName": "Ajax systems UART",
+  "name": "homebridge-ajax-systems-uart",
+  "version": "0.0.1",
+  "description": "Connect Ajax security system via UART board.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "git@github.com:gawy/homebridge-ajax-systems-uart.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/gawy/homebridge-ajax-systems-uart/issues"
   },
   "engines": {
     "node": ">=14.18.1",
@@ -24,7 +24,7 @@
     "prepublishOnly": "npm run lint && npm run build"
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin","Ajax systems UART"
   ],
   "dependencies": {},
   "devDependencies": {

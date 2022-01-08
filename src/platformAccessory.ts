@@ -47,8 +47,8 @@ export class LeaksProtectAccessory {
     //   .onGet(this.getOn.bind(this));               // GET - bind to the `getOn` method below
 
     // register handlers for the Brightness Characteristic
-    this.service.getCharacteristic(this.platform.Characteristic.LeakDetected)
-      .onSet(this.handleLeakStatusChange.bind(this));       // SET - bind to the 'setBrightness` method below
+    // this.service.getCharacteristic(this.platform.Characteristic.LeakDetected)
+    //   .onSet(this.handleLeakStatusChange.bind(this));       // SET - bind to the 'setBrightness` method below
 
     /**
      * Creating multiple services of the same type.

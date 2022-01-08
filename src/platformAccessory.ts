@@ -1,13 +1,13 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
-import { ExampleHomebridgePlatform } from './platform';
+import { AjaxSystemsUartPlatform, LeakDevice } from './platform';
 
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class ExamplePlatformAccessory {
+export class LeaksProtectAccessory {
   private service: Service;
 
   /**
@@ -20,35 +20,35 @@ export class ExamplePlatformAccessory {
   };
 
   constructor(
-    private readonly platform: ExampleHomebridgePlatform,
+    private readonly platform: AjaxSystemsUartPlatform,
     private readonly accessory: PlatformAccessory,
   ) {
 
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Default-Manufacturer')
-      .setCharacteristic(this.platform.Characteristic.Model, 'Default-Model')
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Ajax Systems')
+      .setCharacteristic(this.platform.Characteristic.Model, 'LeaksProtect')
       .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial');
 
-    // get the LightBulb service if it exists, otherwise create a new LightBulb service
-    // you can create multiple services for each accessory
-    this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb);
+    this.service = this.accessory.getService(this.platform.Service.LeakSensor)
+                   || this.accessory.addService(this.platform.Service.LeakSensor);
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.exampleDisplayName);
+    const device: LeakDevice = accessory.context.device;
+    this.service.setCharacteristic(this.platform.Characteristic.Name, device.displayName);
 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
 
     // register handlers for the On/Off Characteristic
-    this.service.getCharacteristic(this.platform.Characteristic.On)
-      .onSet(this.setOn.bind(this))                // SET - bind to the `setOn` method below
-      .onGet(this.getOn.bind(this));               // GET - bind to the `getOn` method below
+    // this.service.getCharacteristic(this.platform.Characteristic.On)
+    //   .onSet(this.setOn.bind(this))                // SET - bind to the `setOn` method below
+    //   .onGet(this.getOn.bind(this));               // GET - bind to the `getOn` method below
 
     // register handlers for the Brightness Characteristic
-    this.service.getCharacteristic(this.platform.Characteristic.Brightness)
-      .onSet(this.setBrightness.bind(this));       // SET - bind to the 'setBrightness` method below
+    this.service.getCharacteristic(this.platform.Characteristic.LeakDetected)
+      .onSet(this.handleLeakStatusChange.bind(this));       // SET - bind to the 'setBrightness` method below
 
     /**
      * Creating multiple services of the same type.
@@ -62,11 +62,11 @@ export class ExamplePlatformAccessory {
      */
 
     // Example: add two "motion sensor" services to the accessory
-    const motionSensorOneService = this.accessory.getService('Motion Sensor One Name') ||
-      this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor One Name', 'YourUniqueIdentifier-1');
+    // const motionSensorOneService = this.accessory.getService('Motion Sensor One Name') ||
+    //   this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor One Name', 'YourUniqueIdentifier-1');
 
-    const motionSensorTwoService = this.accessory.getService('Motion Sensor Two Name') ||
-      this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor Two Name', 'YourUniqueIdentifier-2');
+    // const motionSensorTwoService = this.accessory.getService('Motion Sensor Two Name') ||
+    //   this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor Two Name', 'YourUniqueIdentifier-2');
 
     /**
      * Updating characteristics values asynchronously.
@@ -77,30 +77,31 @@ export class ExamplePlatformAccessory {
      * the `updateCharacteristic` method.
      *
      */
-    let motionDetected = false;
-    setInterval(() => {
-      // EXAMPLE - inverse the trigger
-      motionDetected = !motionDetected;
+    // let leakDetected = false;
+    // setInterval(() => {
+    //   // EXAMPLE - inverse the trigger
+    //   leakDetected = !leakDetected;
 
-      // push the new value to HomeKit
-      motionSensorOneService.updateCharacteristic(this.platform.Characteristic.MotionDetected, motionDetected);
-      motionSensorTwoService.updateCharacteristic(this.platform.Characteristic.MotionDetected, !motionDetected);
+    //   // push the new value to HomeKit
+    //   this.service.updateCharacteristic(this.platform.Characteristic.LeakDetected, leakDetected);
+    //   // motionSensorOneService.updateCharacteristic(this.platform.Characteristic.MotionDetected, leakDetected);
+    //   // motionSensorTwoService.updateCharacteristic(this.platform.Characteristic.MotionDetected, !leakDetected);
 
-      this.platform.log.debug('Triggering motionSensorOneService:', motionDetected);
-      this.platform.log.debug('Triggering motionSensorTwoService:', !motionDetected);
-    }, 10000);
+    //   this.platform.log.debug('Triggering leak detected event:', leakDetected);
+    //   // this.platform.log.debug('Triggering motionSensorTwoService:', !leakDetected);
+    // }, 3000);
   }
 
   /**
    * Handle "SET" requests from HomeKit
    * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
    */
-  async setOn(value: CharacteristicValue) {
-    // implement your own code to turn your device on/off
-    this.exampleStates.On = value as boolean;
+  // async setOn(value: CharacteristicValue) {
+  //   // implement your own code to turn your device on/off
+  //   this.exampleStates.On = value as boolean;
 
-    this.platform.log.debug('Set Characteristic On ->', value);
-  }
+  //   this.platform.log.debug('Set Characteristic On ->', value);
+  // }
 
   /**
    * Handle the "GET" requests from HomeKit
@@ -115,27 +116,26 @@ export class ExamplePlatformAccessory {
    * @example
    * this.service.updateCharacteristic(this.platform.Characteristic.On, true)
    */
-  async getOn(): Promise<CharacteristicValue> {
-    // implement your own code to check if the device is on
-    const isOn = this.exampleStates.On;
+  // async getOn(): Promise<CharacteristicValue> {
+  //   // implement your own code to check if the device is on
+  //   const isOn = this.exampleStates.On;
 
-    this.platform.log.debug('Get Characteristic On ->', isOn);
+  //   this.platform.log.debug('Get Characteristic On ->', isOn);
 
-    // if you need to return an error to show the device as "Not Responding" in the Home app:
-    // throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+  //   // if you need to return an error to show the device as "Not Responding" in the Home app:
+  //   // throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
 
-    return isOn;
-  }
+  //   return isOn;
+  // }
 
   /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, changing the Brightness
+   * Handle status change of the leak detected characteristic from sensor.
    */
-  async setBrightness(value: CharacteristicValue) {
-    // implement your own code to set the brightness
-    this.exampleStates.Brightness = value as number;
+  handleLeakStatusChange() {
+    const currentValue = this.platform.Characteristic.LeakDetected.LEAK_DETECTED;
 
-    this.platform.log.debug('Set Characteristic Brightness -> ', value);
+    this.platform.log.debug('Leak status changed to -> ', currentValue);
+    return currentValue;
   }
 
 }

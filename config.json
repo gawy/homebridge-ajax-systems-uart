@@ -1,0 +1,8 @@
+{
+"platforms": [
+    {
+      "platform" : "AjaxSystemsUartHomebridgePlugin",
+      "name" : "homebridge-ajax-systems-uart"
+    }
+  ]
+}

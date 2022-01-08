@@ -2,6 +2,7 @@ import { API, DynamicPlatformPlugin, PlatformAccessory, PlatformConfig, Service,
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { LeaksProtectAccessory } from './platformAccessory';
+import { UartListener } from './uartListener';
 
 export interface LeakDevice {
   id: string;
@@ -25,6 +26,8 @@ export class AjaxSystemsUartPlatform implements DynamicPlatformPlugin {
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
+    const uart = UartListener.instance(this.log); //initialize
+
     this.log.debug('Finished initializing platform:', this.config.name);
 
     // When this event is fired it means Homebridge has restored all cached accessories from disk.

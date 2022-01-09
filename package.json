@@ -2,7 +2,7 @@
   "private": true,
   "displayName": "Ajax systems UART",
   "name": "homebridge-ajax-systems-uart",
-  "version": "0.0.1",
+  "version": "0.0.2-beta.0",
   "description": "Connect Ajax security system via UART board.",
   "license": "Apache-2.0",
   "repository": {

@@ -28,8 +28,7 @@
     "Ajax systems UART"
   ],
   "dependencies": {
-    "raspi": "^6.0.1",
-    "raspi-serial": "^6.0.0"
+    "serialport": "^9.2.8"
   },
   "devDependencies": {
     "@types/node": "^16.10.9",

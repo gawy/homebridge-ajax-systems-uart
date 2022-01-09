@@ -1,9 +1,7 @@
 
 <p align="center">
 
-<img src="https://github.com/homebridge/branding/raw/master/logos/homebridge-wordmark-logo-vertical.png" width="150">
-
-<img src="./docs/ajax-logo.png" width="150">
+<img src="./docs/logos.png" width="450">
 
 </p>
 

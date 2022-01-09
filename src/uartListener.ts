@@ -1,16 +1,22 @@
 import { Logger } from 'homebridge';
 import SerialPort from 'serialport';
 import Readline from '@serialport/parser-readline';
+import { ajaxMessageFromString, SerialMessage } from './ajaxSerialMessage';
+import { AjaxSerialMessageType } from './ajax';
+import { Transform } from 'stream';
 
 const SERIAL_DEVICE_NAME = '/dev/serial0';
 const BAUD_RATE = 57600;
+
+
 export class UartListener {
 
-  public messageObserver: ((msg: string) => void) | undefined;
+  private _observers: Record<string, (msg: SerialMessage) => void> = {};
 
   private static _instance: UartListener;
 
   private constructor(private readonly log: Logger) {
+
     const serialPort = new SerialPort(SERIAL_DEVICE_NAME, {baudRate: BAUD_RATE},
       (err) => {
         if (err) {
@@ -19,14 +25,41 @@ export class UartListener {
           this.log.debug(`Serial port open: ${SERIAL_DEVICE_NAME}, rate=${BAUD_RATE}`);
         }
       });
-    const parser = serialPort.pipe(new Readline({ delimiter: '\r\n', encoding: 'ascii' }));
-    parser.on('data', (data) => {
-      this.log.debug(data);
+
+    const processMessage = new Transform({
+      readableObjectMode: true,
+      transform(chunk: string, encoding, callback) {
+        const msg = ajaxMessageFromString(chunk.toString());
+        if (msg.messageType !== AjaxSerialMessageType.UNKNOWN) {
+          log.debug(`MSG: ${msg}`);
+          this.push(msg);
+        } else {
+          log.debug(`Message skipped: ${chunk.toString()}`);
+        }
+        callback();
+      },
     });
+
+    serialPort.pipe(new Readline({ delimiter: '\r\n', encoding: 'ascii' }))
+      .pipe(processMessage)
+      .on('data', (msg: SerialMessage) => {
+        log.debug(`Calling observers for message ${msg.messageType}`);
+        if (msg.deviceId in this._observers) {
+          this._observers[msg.deviceId](msg);
+        } else {
+          log.debug(`Nothing wanted to nandle a message. No observers found. MSG: ${msg}`);
+        }
+      });
+
   }
 
   public static instance(logger: Logger) {
     return this._instance || (this._instance = new this(logger));
+  }
+
+  registerObserverForDevice(deviceId: string, observer: (msg:SerialMessage)=>void):void {
+    this._observers[deviceId] = observer;
+    this.log.debug(`Serial port observer added for device id ${deviceId}`);
   }
 
 }

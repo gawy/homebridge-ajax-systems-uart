@@ -1,4 +1,6 @@
-import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
+import { Service, PlatformAccessory } from 'homebridge';
+import { AjaxAlarmType, AjaxSerialMessageType } from './ajax';
+import { AlarmMessage, SerialMessage } from './ajaxSerialMessage';
 
 import { AjaxSystemsUartPlatform, LeakDevice } from './platform';
 
@@ -22,13 +24,14 @@ export class LeaksProtectAccessory {
   constructor(
     private readonly platform: AjaxSystemsUartPlatform,
     private readonly accessory: PlatformAccessory,
+    private readonly serialNumber: string,
   ) {
 
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Ajax Systems')
       .setCharacteristic(this.platform.Characteristic.Model, 'LeaksProtect')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial');
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, serialNumber);
 
     this.service = this.accessory.getService(this.platform.Service.LeakSensor)
                    || this.accessory.addService(this.platform.Service.LeakSensor);
@@ -128,14 +131,14 @@ export class LeaksProtectAccessory {
   //   return isOn;
   // }
 
-  /**
-   * Handle status change of the leak detected characteristic from sensor.
-   */
-  handleLeakStatusChange() {
-    const currentValue = this.platform.Characteristic.LeakDetected.LEAK_DETECTED;
+  handleSerialPortMessage(msg: SerialMessage) {
+    if (msg.messageType === AjaxSerialMessageType.ALARM) {
+      const msgObj = msg as AlarmMessage;
 
-    this.platform.log.debug('Leak status changed to -> ', currentValue);
-    return currentValue;
+      const value = msgObj.alarmType === AjaxAlarmType.FloodDetected
+        ? this.platform.Characteristic.LeakDetected.LEAK_DETECTED : this.platform.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
+      this.service.updateCharacteristic(this.platform.Characteristic.LeakDetected, value);
+    }
   }
 
 }

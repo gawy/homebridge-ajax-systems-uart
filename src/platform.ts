@@ -20,13 +20,14 @@ export class AjaxSystemsUartPlatform implements DynamicPlatformPlugin {
 
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
+  readonly uart: UartListener;
 
   constructor(
     public readonly log: Logging,
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
-    const uart = UartListener.instance(this.log); //initialize
+    this.uart = UartListener.instance(this.log); //initialize
 
     this.log.debug('Finished initializing platform:', this.config.name);
 
@@ -91,7 +92,8 @@ export class AjaxSystemsUartPlatform implements DynamicPlatformPlugin {
 
         // create the accessory handler for the restored accessory
         // this is imported from `platformAccessory.ts`
-        new LeaksProtectAccessory(this, existingAccessory);
+        const ajaxObj = new LeaksProtectAccessory(this, existingAccessory, device.id);
+        this.uart.registerObserverForDevice(device.id, (msg) => ajaxObj.handleSerialPortMessage(msg));
 
         // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
         // remove platform accessories when no longer present
@@ -110,7 +112,8 @@ export class AjaxSystemsUartPlatform implements DynamicPlatformPlugin {
 
         // create the accessory handler for the newly create accessory
         // this is imported from `platformAccessory.ts`
-        new LeaksProtectAccessory(this, accessory);
+        const ajaxObj = new LeaksProtectAccessory(this, accessory, device.id);
+        this.uart.registerObserverForDevice(device.id, (msg) => ajaxObj.handleSerialPortMessage(msg));
 
         // link the accessory to your platform
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

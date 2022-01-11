@@ -118,3 +118,7 @@ dist
 .yarn/unplugged
 .yarn/build-state.yml
 .pnp.*
+
+# Homebridge folders from dev mode
+/persist
+/accessories

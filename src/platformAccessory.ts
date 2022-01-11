@@ -1,6 +1,6 @@
 import { Service, PlatformAccessory } from 'homebridge';
 import { AjaxAlarmType, AjaxSerialMessageType } from './ajax';
-import { AlarmMessage, SerialMessage } from './ajaxSerialMessage';
+import { AlarmMessage, SerialMessage, StatusPingMessage } from './ajaxSerialMessage';
 
 import { AjaxSystemsUartPlatform, LeakDevice } from './platform';
 
@@ -132,12 +132,24 @@ export class LeaksProtectAccessory {
   // }
 
   handleSerialPortMessage(msg: SerialMessage) {
-    if (msg.messageType === AjaxSerialMessageType.ALARM) {
-      const msgObj = msg as AlarmMessage;
+    switch (msg.messageType ) {
+      case AjaxSerialMessageType.ALARM: {
+        const msgObj = msg as AlarmMessage;
 
-      const value = msgObj.alarmType === AjaxAlarmType.FloodDetected
-        ? this.platform.Characteristic.LeakDetected.LEAK_DETECTED : this.platform.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
-      this.service.updateCharacteristic(this.platform.Characteristic.LeakDetected, value);
+        const value = msgObj.alarmType === AjaxAlarmType.FloodDetected
+          ? this.platform.Characteristic.LeakDetected.LEAK_DETECTED : this.platform.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
+        this.service.updateCharacteristic(this.platform.Characteristic.LeakDetected, value);
+        break;
+      }
+      case AjaxSerialMessageType.STATUS: {
+        if (msg instanceof StatusPingMessage) {
+          const msgObj = msg as StatusPingMessage;
+          this.service.updateCharacteristic(this.platform.Characteristic.StatusLowBattery, msgObj.battery);
+        }
+        break;
+      }
+      default:
+        break;
     }
   }
 

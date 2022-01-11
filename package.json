@@ -1,8 +1,8 @@
 {
-  "private": true,
+  "private": false,
   "displayName": "Ajax systems UART",
   "name": "homebridge-ajax-systems-uart",
-  "version": "0.0.2-beta.0",
+  "version": "0.0.2-beta.1",
   "description": "Connect Ajax security system via UART board.",
   "license": "Apache-2.0",
   "repository": {
@@ -13,7 +13,7 @@
     "url": "https://github.com/gawy/homebridge-ajax-systems-uart/issues"
   },
   "engines": {
-    "node": ">=14.18.1",
+    "node": ">=14.17.1",
     "homebridge": ">=1.3.5"
   },
   "main": "dist/index.js",

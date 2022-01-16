@@ -1,7 +1,7 @@
 import { API, DynamicPlatformPlugin, PlatformAccessory, PlatformConfig, Service, Characteristic, Logging } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { LeaksProtectAccessory } from './platformAccessory';
+import { LeaksProtectAccessory } from './accessories/leaksProtect';
 import { UartListener } from './uartListener';
 
 export interface LeakDevice {

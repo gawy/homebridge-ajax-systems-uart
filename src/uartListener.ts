@@ -1,7 +1,7 @@
 import { Logger } from 'homebridge';
 import SerialPort from 'serialport';
 import Readline from '@serialport/parser-readline';
-import { ajaxMessageFromString, SerialMessage } from './ajaxSerialMessage';
+import { ajaxMessageFromString, SerialMessage } from './messages/ajaxSerialMessage';
 import { AjaxSerialMessageType } from './ajax';
 import { Transform } from 'stream';
 
@@ -26,7 +26,7 @@ export class UartListener {
         }
       });
 
-    const processMessage = new Transform({
+    const processMessage = new Transform({ //define transform to parse string messag to object
       readableObjectMode: true,
       transform(chunk: string, encoding, callback) {
         const msg = ajaxMessageFromString(chunk.toString());
@@ -40,9 +40,10 @@ export class UartListener {
       },
     });
 
+    // process messages line by line
     serialPort.pipe(new Readline({ delimiter: '\r\n', encoding: 'ascii' }))
-      .pipe(processMessage)
-      .on('data', (msg: SerialMessage) => {
+      .pipe(processMessage) // parse string to message object
+      .on('data', (msg: SerialMessage) => { // call device specific handler function
         log.debug(`Calling observers for message ${msg.messageType}`);
         if (msg.deviceId in this._observers) {
           this._observers[msg.deviceId](msg);

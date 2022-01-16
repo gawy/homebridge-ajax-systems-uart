@@ -1,8 +1,11 @@
 import { Service, PlatformAccessory } from 'homebridge';
-import { AjaxAlarmType, AjaxSerialMessageType } from './ajax';
-import { AlarmMessage, SerialMessage, StatusPingMessage } from './ajaxSerialMessage';
+import { AjaxAlarmType, AjaxSerialMessageType } from '../ajax';
+import { SerialMessage } from '../messages/ajaxSerialMessage';
+import { AlarmMessage } from '../messages/AlarmMessage';
+import { DevInfoMessage } from '../messages/DevInfoMessage';
+import { StatusPingMessage } from '../messages/StatusPingMessage';
 
-import { AjaxSystemsUartPlatform, LeakDevice } from './platform';
+import { AjaxSystemsUartPlatform, LeakDevice } from '../platform';
 
 /**
  * Platform Accessory
@@ -10,16 +13,8 @@ import { AjaxSystemsUartPlatform, LeakDevice } from './platform';
  * Each accessory may expose multiple services of different service types.
  */
 export class LeaksProtectAccessory {
-  private service: Service;
-
-  /**
-   * These are just used to create a working example
-   * You should implement your own code to track the state of your accessory
-   */
-  private exampleStates = {
-    On: false,
-    Brightness: 100,
-  };
+  private leaksService: Service;
+  private teamperatureService: Service;
 
   constructor(
     private readonly platform: AjaxSystemsUartPlatform,
@@ -33,13 +28,16 @@ export class LeaksProtectAccessory {
       .setCharacteristic(this.platform.Characteristic.Model, 'LeaksProtect')
       .setCharacteristic(this.platform.Characteristic.SerialNumber, serialNumber);
 
-    this.service = this.accessory.getService(this.platform.Service.LeakSensor)
+    this.leaksService = this.accessory.getService(this.platform.Service.LeakSensor)
                    || this.accessory.addService(this.platform.Service.LeakSensor);
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
     const device: LeakDevice = accessory.context.device;
-    this.service.setCharacteristic(this.platform.Characteristic.Name, device.displayName);
+    this.leaksService.setCharacteristic(this.platform.Characteristic.Name, device.displayName);
+
+    this.teamperatureService = this.accessory.getService(this.platform.Service.TemperatureSensor)
+                              || this.accessory.addService(this.platform.Service.TemperatureSensor);
 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
@@ -138,17 +136,24 @@ export class LeaksProtectAccessory {
 
         const value = msgObj.alarmType === AjaxAlarmType.FloodDetected
           ? this.platform.Characteristic.LeakDetected.LEAK_DETECTED : this.platform.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
-        this.service.updateCharacteristic(this.platform.Characteristic.LeakDetected, value);
+        this.leaksService.updateCharacteristic(this.platform.Characteristic.LeakDetected, value);
         break;
       }
       case AjaxSerialMessageType.STATUS: {
         if (msg instanceof StatusPingMessage) {
           const msgObj = msg as StatusPingMessage;
-          this.service.updateCharacteristic(this.platform.Characteristic.StatusLowBattery, msgObj.battery);
+          this.leaksService.updateCharacteristic(this.platform.Characteristic.StatusLowBattery, msgObj.battery);
         }
         break;
       }
+      case AjaxSerialMessageType.DEVINFO: {
+        const msgObj = msg as DevInfoMessage;
+        this.teamperatureService.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, msgObj.temperature);
+        break;
+      }
       default:
+        this.platform.log.warn(`Handler for serial port message ${AjaxSerialMessageType[msg.messageType]} 
+                                was called but message was ignored.`);
         break;
     }
   }

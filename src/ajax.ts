@@ -17,6 +17,7 @@ export enum AjaxSerialMessageType {
   ALARM = 'ALARM',
   STATUS = 'STATUS',
   RSTATE = 'RSTATE',
+  DEVINFO = 'DEVINFO',
   UNKNOWN = ''
 }
 

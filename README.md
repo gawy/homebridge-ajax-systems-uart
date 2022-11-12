@@ -5,6 +5,8 @@
 
 </p>
 
+# This project is work in progress that was paused due to Russian war against Ukraine
+It's very early and not ready for real usage.
 
 # Homebridge Plugin for Ajax Systems (via UART bridge)
 
